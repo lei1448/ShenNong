@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40bf0a2c984a68245b2ffba57ba85e23, type: 3}
+  m_Name: CornConfig
+  m_EditorClassIdentifier: 
+  CropName: corn
+  Icon: {fileID: 21300000, guid: a447577fe9a5fc04da5f861a92112ead, type: 3}
+  DaysToMature: 100
+  GrowthStages:
+  - {fileID: 21300000, guid: a447577fe9a5fc04da5f861a92112ead, type: 3}
+  - {fileID: 21300000, guid: f65cbdb5f96bc6545bdfdd25e9fe8d8d, type: 3}
+  - {fileID: 21300000, guid: 9ae2a476952449140bd8a0829cd02b20, type: 3}
+  SuitableSolarTerms:
+  - "\u7ACB\u6625"
+  KnowledgeDescription: 
+  KnowledgeIcon: {fileID: 0}

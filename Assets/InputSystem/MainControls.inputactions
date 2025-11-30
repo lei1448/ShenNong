@@ -1,0 +1,94 @@
+{
+    "name": "MainControls",
+    "maps": [
+        {
+            "name": "MainActionMap",
+            "id": "a4e4b131-e81b-4d9f-b976-3578178b0cb1",
+            "actions": [
+                {
+                    "name": "MoveView",
+                    "type": "Button",
+                    "id": "ea3b721f-743b-4b5a-99a5-5b3018e93120",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "RotateViewClockwise",
+                    "type": "Button",
+                    "id": "3943e45d-b3b8-4708-9b8f-a3b454344465",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "RotateViewCounterclockwise",
+                    "type": "Button",
+                    "id": "af959950-3f89-48aa-8232-526025e059a4",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Zoom",
+                    "type": "Value",
+                    "id": "1ad8db9f-2e9e-4776-93ec-a15e0febb080",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "950c0f5f-e194-4205-9884-a7e88de221f9",
+                    "path": "<Mouse>/middleButton",
+                    "interactions": "Press(behavior=2)",
+                    "processors": "",
+                    "groups": "",
+                    "action": "MoveView",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "ecd5edf8-08c5-4950-ab53-3f461b04f6ef",
+                    "path": "<Keyboard>/q",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "RotateViewClockwise",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "7a884862-c09b-4c35-8a9d-11200226d2bf",
+                    "path": "<Keyboard>/e",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "RotateViewCounterclockwise",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "3b969575-e5d6-4b54-a560-927161601523",
+                    "path": "<Mouse>/scroll",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Zoom",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

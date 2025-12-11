@@ -41,7 +41,7 @@ public class ToolbarViewController : MonoBehaviour, IController
         rt.anchorMin = new Vector2(0, 0.5f); // Left Center
         rt.anchorMax = new Vector2(0, 0.5f);
         rt.pivot = new Vector2(0, 0.5f);
-        rt.anchoredPosition = new Vector2(50, 50); // Moved Left (80->50) and Up (0->50)
+        rt.anchoredPosition = new Vector2(23, 66); // Moved Left (80->50) and Up (0->50)
         rt.sizeDelta = new Vector2(100, 300);
 
         VerticalLayoutGroup layout = _panel.AddComponent<VerticalLayoutGroup>(); // Vertical

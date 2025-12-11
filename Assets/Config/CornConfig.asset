@@ -19,7 +19,20 @@ MonoBehaviour:
   - {fileID: 21300000, guid: a447577fe9a5fc04da5f861a92112ead, type: 3}
   - {fileID: 21300000, guid: f65cbdb5f96bc6545bdfdd25e9fe8d8d, type: 3}
   - {fileID: 21300000, guid: 9ae2a476952449140bd8a0829cd02b20, type: 3}
+  MaxHP: 100
+  TempRange:
+    Min: 0
+    Max: 46
+  LightRange:
+    Min: 0
+    Max: 33
+  MoistureRange:
+    Min: 0
+    Max: 24
+  FertilityRange:
+    Min: 0
+    Max: 66
   SuitableSolarTerms:
   - "\u7ACB\u6625"
-  KnowledgeDescription: 
-  KnowledgeIcon: {fileID: 0}
+  KnowledgeDescription: 123123123
+  KnowledgeIcon: {fileID: 21300000, guid: 9ae2a476952449140bd8a0829cd02b20, type: 3}

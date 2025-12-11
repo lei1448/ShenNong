@@ -23,7 +23,7 @@ public class KnowledgeModel : AbstractModel, IKnowledgeModel
         if (!string.IsNullOrEmpty(knowledgeId) && !UnlockedKnowledge.Contains(knowledgeId))
         {
             UnlockedKnowledge.Add(knowledgeId);
-            // 可以发送解锁事件
+            this.SendEvent(new OnKnowledgeUnlocked() { KnowledgeId = knowledgeId });
             Debug.Log($"[Knowledge] Unlocked: {knowledgeId}");
         }
     }
@@ -32,4 +32,9 @@ public class KnowledgeModel : AbstractModel, IKnowledgeModel
     {
         return UnlockedKnowledge.Contains(knowledgeId);
     }
+}
+
+public struct OnKnowledgeUnlocked
+{
+    public string KnowledgeId;
 }

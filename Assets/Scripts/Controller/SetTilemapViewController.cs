@@ -1,14 +1,11 @@
-using System.Collections;
-using System.Collections.Generic;
 using QFramework;
-using Unity.VisualScripting;
-using UnityEditor.ShaderGraph;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
 
 public class SetTilemapViewController : MonoBehaviour,IController
 {
-    public DualGridTilemap dualGridTilemap;
+        public DualGridTilemap dualGridTilemap;
     private ICursorModel cursorModel;
     private Vector3Int mousePos;
     public IArchitecture GetArchitecture()
@@ -26,6 +23,16 @@ public class SetTilemapViewController : MonoBehaviour,IController
     }
     void Update()
     {
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
+
+        // Check bounds
+        Vector3 viewportPos = Camera.main.ScreenToViewportPoint(Input.mousePosition);
+        if (Mathf.Abs(viewportPos.x - 0.5f) > cursorModel.ViewRatioX / 2f ||
+            Mathf.Abs(viewportPos.y - 0.5f) > cursorModel.ViewRatioY / 2f)
+        {
+            return;
+        }
+
         if(Input.GetMouseButton(0))
         {
             mousePos = cursorModel.CursorPos;

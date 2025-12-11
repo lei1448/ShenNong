@@ -7,3 +7,4 @@ public struct OnSeasonChange // 节气变更 (可选，如果需要特殊通知)
 {
     public string TermName;
 }
+

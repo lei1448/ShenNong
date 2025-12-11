@@ -35,7 +35,7 @@ public class SolorTermInfoViewController : MonoBehaviour,IController
     public void UpdateSolorTermInfo()
     {
         _solorTermName.text = _termModel.CurrentTermName;
-        _solorTermTemp.text = _termModel.CurrentTemp.ToString();
+        _solorTermTemp.text = _termModel.CurrentTemp.ToString() + "°C";
         _solorTermLightInfo.text = _termModel.CurrentLight;
     }
 }

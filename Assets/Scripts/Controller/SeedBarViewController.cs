@@ -12,7 +12,7 @@ public class SeedBarViewController : MonoBehaviour, IController
     public Transform slotContainer;   // 拖入挂载了 HorizontalLayoutGroup 的父物体
 
     private ICropModel _cropModel;
-    private List<GameObject> _spawnedSlots = new List<GameObject>();
+    private readonly List<GameObject> _spawnedSlots = new();
 
     public IArchitecture GetArchitecture() => ShennongAlmanac.Interface;
 
@@ -43,8 +43,7 @@ public class SeedBarViewController : MonoBehaviour, IController
         _spawnedSlots.Add(slotObj);
 
         // 设置图标 (假设 Prefab 里有一个名为 "Icon" 的子物体 Image)
-        Image iconImg = slotObj.transform.Find("Icon").GetComponent<Image>();
-        if (iconImg != null) iconImg.sprite = config.Icon;
+        if (slotObj.transform.Find("Icon").TryGetComponent<Image>(out var iconImg)) iconImg.sprite = config.Icon;
 
         // 绑定点击事件
         Button btn = slotObj.GetComponent<Button>();

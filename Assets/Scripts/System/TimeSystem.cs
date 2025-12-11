@@ -25,11 +25,29 @@ public class TimeSystem : AbstractSystem
         }
     }
 
+    // 切换到下一个节气
+    public void AdvanceTerm()
+    {
+        // 1. 回合结算：在进入新节气前，对当前节气进行结算
+        this.SendEvent(new OnTermSettlement { TermName = _termModel.CurrentTermName, TermIndex = _termModel.CurrentTermId.Value });
+
+        _termModel.CurrentDayInTerm.Value = 1;
+        _termModel.CurrentTermId.Value++; 
+        
+        // 2. 回合开始：进入新节气，通知 FarmSystem 初始化环境
+        this.SendEvent(new OnTermChange { TermName = _termModel.CurrentTermName, TermIndex = _termModel.CurrentTermId.Value });
+
+        // 发送新的一天事件，通知农作物生长
+        this.SendEvent(new OnDayPass { CurrentDay = _termModel.CurrentDayInTerm.Value });
+    }
+
     // 外部调用此方法让时间前进一天
     public void AdvanceDay()
     {
         _termModel.CurrentDayInTerm.Value++;
 
+        // 移除自动切换节气的逻辑
+        /*
         // 检查是否超过一个节气的天数
         if (_termModel.CurrentDayInTerm.Value > _termModel.DaysPerTerm)
         {
@@ -39,6 +57,7 @@ public class TimeSystem : AbstractSystem
             // 发送节气变更事件（可选）
             // this.SendEvent(new OnSeasonChange { TermName = _termModel.CurrentTermName });
         }
+        */
 
         // 发送新的一天事件，通知农作物生长
         this.SendEvent(new OnDayPass { CurrentDay = _termModel.CurrentDayInTerm.Value });

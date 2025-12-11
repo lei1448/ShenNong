@@ -1,6 +1,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public struct CropParameterRange
+{
+    public int Min;
+    public int Max;
+}
+
 [CreateAssetMenu(fileName = "NewCrop", menuName = "Shennong/CropConfig")]
 public class CropConfig : ScriptableObject
 {
@@ -8,6 +15,13 @@ public class CropConfig : ScriptableObject
     public Sprite Icon; // [新增] UI 显示用的图标
     public int DaysToMature; 
     public Sprite[] GrowthStages; 
+    public int MaxHP = 100;
+
+    [Header("Environment Requirements")]
+    public CropParameterRange TempRange;
+    public CropParameterRange LightRange;
+    public CropParameterRange MoistureRange;
+    public CropParameterRange FertilityRange;
 
     [Header("Planting Restrictions")]
     public List<string> SuitableSolarTerms; // List of term names allowed for planting

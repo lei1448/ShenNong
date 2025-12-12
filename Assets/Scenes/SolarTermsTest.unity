@@ -13830,6 +13830,7 @@ GameObject:
   - component: {fileID: 486380521}
   - component: {fileID: 486380523}
   - component: {fileID: 486380522}
+  - component: {fileID: 486380524}
   m_Layer: 5
   m_Name: Tools
   m_TagString: Untagged
@@ -13894,6 +13895,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 486380520}
   m_CullTransparentMesh: 1
+--- !u!114 &486380524
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 486380520}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ded4c0e4c2a0d14eb4f52902746fe8a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &520557079
 GameObject:
   m_ObjectHideFlags: 0
@@ -14450,6 +14463,16 @@ MonoBehaviour:
     type: 3}
   groundTilemap: {fileID: 43750217}
   cropContainer: {fileID: 1710071700}
+  iconPrefab: {fileID: 2797256404731232695, guid: 5a70cb3cb75692a40ac15bd018898504,
+    type: 3}
+  iconOffset: {x: 0.6, y: 1.4, z: 0}
+  iconTempHigh: {fileID: 21300000, guid: f435e3f84bdb02b42979cb1b429b2240, type: 3}
+  iconTempLow: {fileID: 21300000, guid: 0e349eb7fea5107468b25df8b73f4aa2, type: 3}
+  iconLightHigh: {fileID: 21300000, guid: ef77f683ffc725e4196258dad035b308, type: 3}
+  iconLightLow: {fileID: 21300000, guid: 7053f0608ac18b747971a92ab0c6f8e8, type: 3}
+  iconMoistureHigh: {fileID: 21300000, guid: 7746a9a87f66a764da605cbd595f5304, type: 3}
+  iconMoistureLow: {fileID: 21300000, guid: 4ba681c9656602e4285f617aace20aa9, type: 3}
+  iconFertilityLow: {fileID: 21300000, guid: 1eaabc0590c906d4bbedc21be52bca44, type: 3}
 --- !u!1 &1021292451
 GameObject:
   m_ObjectHideFlags: 0

@@ -28,11 +28,13 @@ public class WeatherSystem : AbstractSystem
         string term = _termModel.CurrentTermName;
         WeatherType newWeather = _config.GetWeatherForTerm(term);
         
-        // Special logic for specific terms as requested
+        // Hardcoded logic removed in favor of WeatherConfig.asset
+        /*
         // "Qingming Rain" - High chance of rain if not configured
         if (term == "清明" && Random.value < 0.8f) newWeather = WeatherType.Rainy;
         // "Lidong Leaves" - Windy/Leaves
         if (term == "立冬" && Random.value < 0.8f) newWeather = WeatherType.Windy;
+        */
 
         CurrentWeather.Value = newWeather;
         Debug.Log($"[Weather] Term: {term}, Weather: {newWeather}");

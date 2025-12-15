@@ -16,6 +16,8 @@ public class TimeSystem : AbstractSystem
     // 由 Controller 每帧调用
     public void AdvanceTime(float dayFraction)
     {
+        // Manual Control Mode: Disable automatic time flow.
+        /*
         CurrentTimeOfDay.Value += dayFraction * TimeScale;
 
         if (CurrentTimeOfDay.Value >= 1.0f)
@@ -23,6 +25,7 @@ public class TimeSystem : AbstractSystem
             CurrentTimeOfDay.Value -= 1.0f;
             AdvanceDay();
         }
+        */
     }
 
     // 切换到下一个节气

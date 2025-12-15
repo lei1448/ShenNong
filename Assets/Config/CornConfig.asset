@@ -19,20 +19,21 @@ MonoBehaviour:
   - {fileID: 21300000, guid: a447577fe9a5fc04da5f861a92112ead, type: 3}
   - {fileID: 21300000, guid: f65cbdb5f96bc6545bdfdd25e9fe8d8d, type: 3}
   - {fileID: 21300000, guid: 9ae2a476952449140bd8a0829cd02b20, type: 3}
-  MaxHP: 100
+  MaxHP: 20
   TempRange:
-    Min: 0
-    Max: 46
+    Min: 10
+    Max: 28
   LightRange:
     Min: 0
-    Max: 33
+    Max: 9
   MoistureRange:
-    Min: 0
-    Max: 24
+    Min: 7
+    Max: 9
   FertilityRange:
-    Min: 0
-    Max: 66
+    Min: 6
+    Max: 9
   SuitableSolarTerms:
-  - "\u7ACB\u6625"
-  KnowledgeDescription: 123123123
+  - "\u6E05\u660E"
+  - "\u8C37\u96E8"
+  KnowledgeDescription: "\u8C37\u96E8\u64AD\u91D1\u8986\u6696\u5892\uFF0C\u7ACB\u590F\u62BD\u82BD\u5C55\u7FE0\u82CD\u3002\u8292\u79CD\u62BD\u7F28\u8212\u7389\u7A57\uFF0C\u5C0F\u6691\u51DD\u6D46\u9F13\u5AE9\u8292\u3002\u98CE\u50AC\u719F\uFF0C\u53F6\u6E10\u9EC4\uFF0C\u5904\u6691\u9570\u5F00\u78A7\u6D6A\u957F\u3002\u6EE1\u4ED3\u91D1\u7532\u916C\u52E4\u529B\uFF0C\u7A57\u91CD\u7C92\u5B9E\u6D4E\u5C81\u5EB7\u3002"
   KnowledgeIcon: {fileID: 21300000, guid: 9ae2a476952449140bd8a0829cd02b20, type: 3}

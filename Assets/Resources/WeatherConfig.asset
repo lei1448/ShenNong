@@ -13,6 +13,42 @@ MonoBehaviour:
   m_Name: WeatherConfig
   m_EditorClassIdentifier: 
   WeatherEntries:
-  - TermName: 
-    Weather: 0
-    Probability: 0
+  - TermName: 雨水
+    Weather: 1
+    Probability: 0.8
+  - TermName: 惊蛰
+    Weather: 3
+    Probability: 0.6
+  - TermName: 清明
+    Weather: 1
+    Probability: 0.9
+  - TermName: 谷雨
+    Weather: 1
+    Probability: 0.7
+  - TermName: 芒种
+    Weather: 1
+    Probability: 0.5
+  - TermName: 立秋
+    Weather: 4
+    Probability: 0.6
+  - TermName: 寒露
+    Weather: 3
+    Probability: 0.5
+  - TermName: 霜降
+    Weather: 4
+    Probability: 0.7
+  - TermName: 立冬
+    Weather: 4
+    Probability: 0.8
+  - TermName: 小雪
+    Weather: 2
+    Probability: 0.7
+  - TermName: 大雪
+    Weather: 2
+    Probability: 0.9
+  - TermName: 小寒
+    Weather: 2
+    Probability: 0.6
+  - TermName: 大寒
+    Weather: 2
+    Probability: 0.8

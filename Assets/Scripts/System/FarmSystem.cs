@@ -21,25 +21,31 @@ public class FarmSystem : AbstractSystem
     private void OnDayPass(OnDayPass e)
     {
         // Day pass mainly impacts growth
-        List<Vector3Int> positions = new List<Vector3Int>(_cropModel.CropMap.Keys);
-
-        foreach (var pos in positions)
-        {
-            var crop = _cropModel.CropMap[pos];
-            if (!crop.IsMature)
-            {
-                crop.GrowthDays++;
-                if (crop.GrowthDays >= crop.Config.DaysToMature)
-                {
-                    crop.IsMature = true;
-                }
-                this.SendEvent(new OnCropUpdated { Position = pos });
-            }
-        }
+        AdvanceCropGrowth(1);
     }
 
     private void OnTermSettlement(OnTermSettlement e)
     {
+        // 1. Calculate how many days are remaining in this solar term that we are skipping
+        // CurrentDayInTerm is 1-indexed. If it's day 1, and we jump, we simulate passing the remaining 14 days (Total 15).
+        // If DaysPerTerm is 15.
+        // Days to grow = 15 - CurrentDayInTerm + 1? No.
+        // If I am on Day 1 (Morning), and I skip to Next Term, I am effectively finishing Day 1 to Day 15.
+        // So I grow for (DaysPerTerm - CurrentInTerm + 1) days?
+        // Let's assume standard logic: Remaining days = DaysPerTerm - CurrentDayInTerm + 1. 
+        // e.g. Day 1: 15 - 1 + 1 = 15 days.
+        // e.g. Day 15: 15 - 15 + 1 = 1 day.
+        // Actually, AdvanceTerm resets CurrentDay to 1 for NEXT term.
+        // So we are simulating the PASSAGE of the REST of the current term.
+        // Let's use simple math: DaysToSimulate = _termModel.DaysPerTerm - _termModel.CurrentDayInTerm.Value + 1;
+        
+        int daysToSimulate = _termModel.DaysPerTerm - _termModel.CurrentDayInTerm.Value + 1;
+        // Safety check
+        if (daysToSimulate < 0) daysToSimulate = 0;
+        
+        Debug.Log($"[FarmSystem] Simulating {daysToSimulate} days growth for Term Settlement.");
+        AdvanceCropGrowth(daysToSimulate);
+
         // End of Turn: Calculate Blood / HP Damage based on deviation
         List<Vector3Int> positions = new List<Vector3Int>(_cropModel.CropMap.Keys);
         
@@ -51,6 +57,10 @@ public class FarmSystem : AbstractSystem
             int damage = CalculateDamage(crop);
             if (damage > 0)
             {
+                // Damage is applied once per term skip? Or per day skipped?
+                // Visual Novels usually simplify this to "Turn-based damage".
+                // Let's keep it as is (Once per Term Settlement).
+                
                 crop.CurrentHP -= damage;
                 if (crop.CurrentHP < 0) crop.CurrentHP = 0;
                 
@@ -58,6 +68,25 @@ public class FarmSystem : AbstractSystem
             }
             
             this.SendEvent(new OnCropUpdated { Position = pos });
+        }
+    }
+
+    private void AdvanceCropGrowth(int days)
+    {
+        List<Vector3Int> positions = new List<Vector3Int>(_cropModel.CropMap.Keys);
+
+        foreach (var pos in positions)
+        {
+            var crop = _cropModel.CropMap[pos];
+            if (!crop.IsMature)
+            {
+                crop.GrowthDays += days;
+                if (crop.GrowthDays >= crop.Config.DaysToMature)
+                {
+                    crop.IsMature = true;
+                }
+                this.SendEvent(new OnCropUpdated { Position = pos });
+            }
         }
     }
 

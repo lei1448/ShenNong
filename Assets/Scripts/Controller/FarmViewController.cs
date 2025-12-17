@@ -31,6 +31,7 @@ public class FarmViewController : MonoBehaviour, IController
         _farmSystem = this.GetSystem<FarmSystem>();
 
         this.RegisterEvent<OnCropUpdated>(e => UpdateCropGameObject(e.Position)).UnRegisterWhenGameObjectDestroyed(gameObject);
+        this.RegisterEvent<OnCropDead>(e => UpdateCropGameObject(e.Position)).UnRegisterWhenGameObjectDestroyed(gameObject);
     }
 
     void Update()
@@ -165,6 +166,16 @@ public class FarmViewController : MonoBehaviour, IController
         if (sr != null)
         {
             sr.sprite = data.Config.GetSpriteByProgress(data.GrowthDays);
+            
+            // Visual feedback for dead crops
+            sr.color = data.IsDead ? Color.gray : Color.white;
+            
+            // Visual feedback for Straw (Yellow Tint if alive?)
+            // Or add a child object. For now simple tint override or additive.
+            if (data.HasStraw && !data.IsDead)
+            {
+                sr.color = new Color(1f, 1f, 0.8f); // Light Yellow
+            }
         }
 
         UpdateAlertIcon(cropObj, data);

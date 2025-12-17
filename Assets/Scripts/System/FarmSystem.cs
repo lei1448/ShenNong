@@ -47,9 +47,18 @@ public class FarmSystem : AbstractSystem
             if (damage > 0)
             {
                 crop.CurrentHP -= damage;
-                if (crop.CurrentHP < 0) crop.CurrentHP = 0;
+                if (crop.CurrentHP <= 0)
+                {
+                    crop.CurrentHP = 0;
+                    if (!crop.IsDead)
+                    {
+                        crop.IsDead = true;
+                        Debug.Log($"[FarmSystem] Crop at {pos} died!");
+                        this.SendEvent(new OnCropDead { Position = pos });
+                    }
+                }
                 
-                Debug.Log($"[FarmSystem] Crop at {pos} took {damage} damage. Current HP: {crop.CurrentHP}");
+                Debug.Log($"[FarmSystem] Crop at {pos} took {damage} damage. Current HP: {crop.CurrentHP}. Dead: {crop.IsDead}");
             }
             
             currentTermScore += crop.CurrentHP;
@@ -68,6 +77,8 @@ public class FarmSystem : AbstractSystem
         foreach (var pos in positions)
         {
             var crop = _cropModel.CropMap[pos];
+            if (crop.IsDead) continue; // Dead crops don't grow
+
             if (!crop.IsMature)
             {
                 crop.GrowthDays += days;
@@ -83,10 +94,10 @@ public class FarmSystem : AbstractSystem
     private void OnTermChange(OnTermChange e)
     {
         // Start of Turn: Reset Environment Params
-        // ResetCropEnvironment(); // User requested this to only run on planting. Use ambient update if needed later.
+        UpdateCropEnvironment();
     }
 
-    private void ResetCropEnvironment()
+    private void UpdateCropEnvironment()
     {
         // Set all crops' state to current Term parameters
         int termTemp = _termModel.CurrentTemp;
@@ -97,10 +108,18 @@ public class FarmSystem : AbstractSystem
         foreach (var kvp in _cropModel.CropMap)
         {
             var crop = kvp.Value;
-            crop.CurrentState.Temp = termTemp;
-            crop.CurrentState.Light = termLight;
-            crop.CurrentState.Moisture = termMoisture;
-            crop.CurrentState.Fertility = termFertility;
+            
+            // Turn-based Logic: Reset Player Modifiers at the start of new Term
+            crop.ModifierState = new CropState();
+            crop.HasStraw = false; // Reset Straw insulation
+            
+            // Base = Term Params. Modifier = Player Changes (Now 0).
+            // Current = Base + Modifier.
+            
+            crop.CurrentState.Temp = termTemp + crop.ModifierState.Temp;
+            crop.CurrentState.Light = termLight + crop.ModifierState.Light;
+            crop.CurrentState.Moisture = termMoisture + crop.ModifierState.Moisture;
+            crop.CurrentState.Fertility = termFertility + crop.ModifierState.Fertility;
             
             // Check suitability immediately to update icons
             CheckSuitability(crop);
@@ -117,6 +136,14 @@ public class FarmSystem : AbstractSystem
         var currentStage = crop.Config.GetCurrentStageData(crop.GrowthDays);
         
         //damage += GetDeviation(crop.CurrentState.Temp, currentStage.TempRange);
+        int tempDeviation = GetDeviation(crop.CurrentState.Temp, currentStage.TempRange);
+        if (crop.HasStraw && tempDeviation > 0)
+        {
+            tempDeviation = Mathf.Max(0, tempDeviation - 5); // Ignore up to 5 points of deviation
+            Debug.Log($"[FarmSystem] Straw reduced deviation by 5 (or less). New Deviation: {tempDeviation}");
+        }
+        damage += tempDeviation;
+        
         damage += GetDeviation(crop.CurrentState.Light, currentStage.LightRange);
         damage += GetDeviation(crop.CurrentState.Moisture, currentStage.MoistureRange);
         //damage += GetDeviation(crop.CurrentState.Fertility, currentStage.FertilityRange);
@@ -145,15 +172,19 @@ public class FarmSystem : AbstractSystem
         switch (paramType)
         {
             case "Moisture":
+                crop.ModifierState.Moisture += value;
                 crop.CurrentState.Moisture += value;
                 break;
             case "Fertility":
+                crop.ModifierState.Fertility += value;
                 crop.CurrentState.Fertility += value;
                 break;
             case "Light":
+                crop.ModifierState.Light += value;
                 crop.CurrentState.Light += value;
                 break;
             case "Temp":
+                crop.ModifierState.Temp += value;
                 crop.CurrentState.Temp += value;
                 break;
         }
@@ -183,6 +214,8 @@ public class FarmSystem : AbstractSystem
             
             // Initialize with current environment
             var crop = _cropModel.GetCrop(pos);
+            crop.ModifierState = new CropState(); // Init to 0
+            
             crop.CurrentState.Temp = _termModel.CurrentTemp;
             crop.CurrentState.Light = _termModel.CurrentLightValue;
             crop.CurrentState.Moisture = _termModel.CurrentMoistureValue;
@@ -223,6 +256,7 @@ public class FarmSystem : AbstractSystem
             case ToolType.WateringCan:
                 if (crop != null)
                 {
+                    crop.ModifierState.Moisture += 20;
                     crop.CurrentState.Moisture += 20;
                     Debug.Log($"[FarmSystem] Watered crop at {pos}. Moisture: {crop.CurrentState.Moisture}");
                     this.SendEvent(new OnCropUpdated { Position = pos });
@@ -232,8 +266,18 @@ public class FarmSystem : AbstractSystem
             case ToolType.Fertilizer:
                 if (crop != null)
                 {
+                    crop.ModifierState.Fertility += 20;
                     crop.CurrentState.Fertility += 20;
                     Debug.Log($"[FarmSystem] Fertilized crop at {pos}. Fertility: {crop.CurrentState.Fertility}");
+                    this.SendEvent(new OnCropUpdated { Position = pos });
+                }
+                break;
+
+            case ToolType.Straw:
+                if (crop != null && !crop.HasStraw)
+                {
+                    crop.HasStraw = true;
+                    Debug.Log($"[FarmSystem] Applied Straw to crop at {pos}.");
                     this.SendEvent(new OnCropUpdated { Position = pos });
                 }
                 break;
@@ -241,6 +285,7 @@ public class FarmSystem : AbstractSystem
             case ToolType.Hoe:
                 if (crop != null)
                 {
+                    // Allow removing if dead OR standard removal
                     _cropModel.RemoveCrop(pos);
                     Debug.Log($"[FarmSystem] Hoed/Removed crop at {pos}.");
                     this.SendEvent(new OnCropUpdated { Position = pos });

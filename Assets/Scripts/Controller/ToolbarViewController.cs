@@ -53,6 +53,7 @@ public class ToolbarViewController : MonoBehaviour, IController
         CreateToolButton("WateringCan", ToolType.WateringCan, "Icons/WateringCan");
         CreateToolButton("Fertilizer", ToolType.Fertilizer, "Icons/Fertilizer");
         CreateToolButton("Hoe", ToolType.Hoe, "Icons/Hoe");
+        CreateToolButton("Straw", ToolType.Straw, "Icons/Straw"); // Placeholder or reuse icon if missing
         
         // Add a "None" / Deselect button or handle it differently?
         // Let's add a clear button or just right click to clear?

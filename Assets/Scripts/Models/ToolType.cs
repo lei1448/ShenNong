@@ -3,5 +3,6 @@ public enum ToolType
     None,
     WateringCan,
     Fertilizer,
-    Hoe
+    Hoe,
+    Straw
 }

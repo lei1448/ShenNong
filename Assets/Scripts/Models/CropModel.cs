@@ -17,10 +17,13 @@ public class CropData
     public int PlantedDay; // 种植时的累计总天数
     public int GrowthDays; // 已经生长了几天
     public bool IsMature;  // 是否成熟
+    public bool IsDead;    // 是否死亡
+    public bool HasStraw;  // 是否覆盖秸秆（保温）
     public CropConfig Config; // 引用配置
     
     public int CurrentHP; // 当前血量
-    public CropState CurrentState; // 当前环境状态
+    public CropState ModifierState; // 玩家人为修改的环境值（浇水、施肥）
+    public CropState CurrentState; // 当前环境状态 (Base + Modifier)
 }
 
 public interface ICropModel : IModel

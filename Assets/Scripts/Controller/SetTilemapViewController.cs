@@ -38,10 +38,5 @@ public class SetTilemapViewController : MonoBehaviour,IController
             mousePos = cursorModel.CursorPos;
             dualGridTilemap.SetCell(mousePos,dualGridTilemap.dirtPlaceholderTile);
         }
-        else if(Input.GetMouseButton(1))
-        {
-            mousePos = cursorModel.CursorPos;
-            dualGridTilemap.SetCell(mousePos,dualGridTilemap.grassPlaceholderTile);
-        }
     }
 }

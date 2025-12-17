@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40bf0a2c984a68245b2ffba57ba85e23, type: 3}
+  m_Name: Soybean
+  m_EditorClassIdentifier: 
+  CropName: Soybean
+  CropId: 401
+  Icon: {fileID: 21300000, guid: aacc5abf5c4297b4f9115b1dec7352ad, type: 3}
+  MaxHP: 20
+  Stages:
+  - StageName: Seedling
+    DurationDays: 5
+    StageIcon: {fileID: 21300000, guid: aacc5abf5c4297b4f9115b1dec7352ad, type: 3}
+    TempRange:
+      Min: 10
+      Max: 15
+    LightRange:
+      Min: 0
+      Max: 0
+    MoistureRange:
+      Min: 6
+      Max: 8
+    FertilityRange:
+      Min: 4
+      Max: 6
+  - StageName: Growing
+    DurationDays: 5
+    StageIcon: {fileID: 21300000, guid: 6a444d8cc9a553542a75afe195b8b305, type: 3}
+    TempRange:
+      Min: 20
+      Max: 25
+    LightRange:
+      Min: 6
+      Max: 8
+    MoistureRange:
+      Min: 6
+      Max: 8
+    FertilityRange:
+      Min: 4
+      Max: 6
+  - StageName: Mature
+    DurationDays: 5
+    StageIcon: {fileID: 21300000, guid: 62b55e2986dd5514fa59859dbca8fad1, type: 3}
+    TempRange:
+      Min: 18
+      Max: 22
+    LightRange:
+      Min: 7
+      Max: 9
+    MoistureRange:
+      Min: 6
+      Max: 8
+    FertilityRange:
+      Min: 2
+      Max: 4
+  SuitableSolarTerms:
+  - "\u590F\u81F3"
+  - "\u5C0F\u6691"
+  KnowledgeDescription: 
+  KnowledgeIcon: {fileID: 0}

@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40bf0a2c984a68245b2ffba57ba85e23, type: 3}
+  m_Name: Peanut
+  m_EditorClassIdentifier: 
+  CropName: Peanut
+  CropId: 501
+  Icon: {fileID: 21300000, guid: 5bd0f56af3fa0e3499bf98c12f07eff2, type: 3}
+  MaxHP: 20
+  Stages:
+  - StageName: Seedling
+    DurationDays: 5
+    StageIcon: {fileID: 21300000, guid: 5bd0f56af3fa0e3499bf98c12f07eff2, type: 3}
+    TempRange:
+      Min: 12
+      Max: 15
+    LightRange:
+      Min: 0
+      Max: 0
+    MoistureRange:
+      Min: 7
+      Max: 9
+    FertilityRange:
+      Min: 4
+      Max: 6
+  - StageName: Growing
+    DurationDays: 5
+    StageIcon: {fileID: 21300000, guid: 9db5743896811a64c940dd8b96db2e2b, type: 3}
+    TempRange:
+      Min: 22
+      Max: 28
+    LightRange:
+      Min: 6
+      Max: 8
+    MoistureRange:
+      Min: 4
+      Max: 6
+    FertilityRange:
+      Min: 5
+      Max: 8
+  - StageName: Mature
+    DurationDays: 5
+    StageIcon: {fileID: 21300000, guid: b851a8bb8f0b1d645b5f88266b07019e, type: 3}
+    TempRange:
+      Min: 20
+      Max: 25
+    LightRange:
+      Min: 7
+      Max: 9
+    MoistureRange:
+      Min: 4
+      Max: 6
+    FertilityRange:
+      Min: 4
+      Max: 6
+  SuitableSolarTerms:
+  - "\u8C37\u96E8"
+  - "\u7ACB\u590F"
+  KnowledgeDescription: 
+  KnowledgeIcon: {fileID: 0}

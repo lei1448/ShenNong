@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using static TileType;
+using System.Collections;
 
 public class DualGridTilemap : MonoBehaviour {
     protected static Vector3Int[] NEIGHBOURS = new Vector3Int[] {
@@ -13,50 +13,119 @@ public class DualGridTilemap : MonoBehaviour {
         new Vector3Int(1, 1, 0)
     };
 
-    protected static Dictionary<Tuple<TileType, TileType, TileType, TileType>, Tile> neighbourTupleToTile;
+    // Dictionary to store rules. Now instance-based to allow swapping/updates without static issues
+    protected Dictionary<Tuple<TileType, TileType, TileType, TileType>, Tile> _currentRules;
 
-    // Provide references to each tilemap in the inspector
+    // References
     public Tilemap placeholderTilemap;
     public Tilemap displayTilemap;
+    private Tilemap _displayTilemapNext; // The secondary buffer
 
-    // Provide the dirt and grass placeholder tiles in the inspector
     public Tile grassPlaceholderTile;
     public Tile dirtPlaceholderTile;
-
-    // Provide the 16 tiles in the inspector
     public Tile[] tiles;
 
+    private Coroutine _crossfadeCoroutine;
+    private const float FADE_DURATION = 1.0f;
+    
+    // Map Dimensions
+    public int MapWidth = 100;
+    public int MapHeight = 50; // -25 to 25
+    
+    // Origin is centered (e.g. -Width/2 to Width/2)
+
     void Awake() {
-        InitializeDictionary();
+        _currentRules = GenerateRules(tiles);
     }
 
     void Start() {
-        RefreshDisplayTilemap();
+        GeneratePlaceholderMap();
+        EnsureSecondaryTilemap();
+        RefreshDisplayTilemap(displayTilemap, _currentRules);
+        
+        SetTilemapAlpha(displayTilemap, 1f);
+        SetTilemapAlpha(_displayTilemapNext, 0f);
+    }
+    
+    private void GeneratePlaceholderMap()
+    {
+        if (placeholderTilemap == null) return;
+        
+        placeholderTilemap.ClearAllTiles();
+        
+        int startX = -MapWidth / 2;
+        int endX = MapWidth / 2;
+        int startY = -MapHeight / 2;
+        int endY = MapHeight / 2;
+        
+        // Fill with Grass
+        for (int x = startX; x < endX; x++)
+        {
+            for (int y = startY; y < endY; y++)
+            {
+                placeholderTilemap.SetTile(new Vector3Int(x, y, 0), grassPlaceholderTile);
+            }
+        }
+    }
+    
+    // Create or find the secondary tilemap for double buffering
+    private void EnsureSecondaryTilemap()
+    {
+        if (_displayTilemapNext != null) return;
+        
+        // Look for existing
+        var child = transform.Find("DisplayTilemap_Next");
+        if (child != null)
+        {
+            _displayTilemapNext = child.GetComponent<Tilemap>();
+            return;
+        }
+
+        // Create new by cloning
+        if (displayTilemap != null)
+        {
+            var go = Instantiate(displayTilemap.gameObject, displayTilemap.transform.parent);
+            go.name = "DisplayTilemap_Next";
+            _displayTilemapNext = go.GetComponent<Tilemap>();
+            
+            // Clear it
+            _displayTilemapNext.ClearAllTiles();
+            
+            // Adjust sorting order? Usually same order + z-fighting might occur if not handled.
+            // But since we fade alpha, z-fighting is less of an issue if sorted same.
+            // Better to have Next slightly behind or in front? similar to atmosphere.
+            // Let's keep same Order in Layer.
+            var rend = _displayTilemapNext.GetComponent<TilemapRenderer>();
+            var prevRend = displayTilemap.GetComponent<TilemapRenderer>();
+            if (rend != null && prevRend != null)
+            {
+                rend.sortingOrder = prevRend.sortingOrder; // Same layer
+            }
+        }
     }
 
-    private void InitializeDictionary() {
-        if (neighbourTupleToTile != null) return;
-
-        // This dictionary stores the "rules", each 4-neighbour configuration corresponds to a tile
-        // |_1_|_2_|
-        // |_3_|_4_|
-        neighbourTupleToTile = new() {
-            {new (Grass, Grass, Grass, Grass), tiles[6]},
-            {new (Dirt, Dirt, Dirt, Grass), tiles[13]}, // OUTER_BOTTOM_RIGHT
-            {new (Dirt, Dirt, Grass, Dirt), tiles[0]}, // OUTER_BOTTOM_LEFT
-            {new (Dirt, Grass, Dirt, Dirt), tiles[8]}, // OUTER_TOP_RIGHT
-            {new (Grass, Dirt, Dirt, Dirt), tiles[15]}, // OUTER_TOP_LEFT
-            {new (Dirt, Grass, Dirt, Grass), tiles[1]}, // EDGE_RIGHT
-            {new (Grass, Dirt, Grass, Dirt), tiles[11]}, // EDGE_LEFT
-            {new (Dirt, Dirt, Grass, Grass), tiles[3]}, // EDGE_BOTTOM
-            {new (Grass, Grass, Dirt, Dirt), tiles[9]}, // EDGE_TOP
-            {new (Dirt, Grass, Grass, Grass), tiles[5]}, // INNER_BOTTOM_RIGHT
-            {new (Grass, Dirt, Grass, Grass), tiles[2]}, // INNER_BOTTOM_LEFT
-            {new (Grass, Grass, Dirt, Grass), tiles[10]}, // INNER_TOP_RIGHT
-            {new (Grass, Grass, Grass, Dirt), tiles[7]}, // INNER_TOP_LEFT
-            {new (Dirt, Grass, Grass, Dirt), tiles[14]}, // DUAL_UP_RIGHT
-            {new (Grass, Dirt, Dirt, Grass), tiles[4]}, // DUAL_DOWN_RIGHT
-            {new (Dirt, Dirt, Dirt, Dirt), tiles[12]},
+    // Helper to generate rules from a specific tileset
+    private Dictionary<Tuple<TileType, TileType, TileType, TileType>, Tile> GenerateRules(Tile[] tileSet)
+    {
+        if (tileSet == null || tileSet.Length != 16) return new Dictionary<Tuple<TileType, TileType, TileType, TileType>, Tile>();
+        
+        return new Dictionary<Tuple<TileType, TileType, TileType, TileType>, Tile> {
+            {new (Grass, Grass, Grass, Grass), tileSet[6]},
+            {new (Dirt, Dirt, Dirt, Grass), tileSet[13]},
+            {new (Dirt, Dirt, Grass, Dirt), tileSet[0]},
+            {new (Dirt, Grass, Dirt, Dirt), tileSet[8]},
+            {new (Grass, Dirt, Dirt, Dirt), tileSet[15]},
+            {new (Dirt, Grass, Dirt, Grass), tileSet[1]},
+            {new (Grass, Dirt, Grass, Dirt), tileSet[11]},
+            {new (Dirt, Dirt, Grass, Grass), tileSet[3]},
+            {new (Grass, Grass, Dirt, Dirt), tileSet[9]},
+            {new (Dirt, Grass, Grass, Grass), tileSet[5]},
+            {new (Grass, Dirt, Grass, Grass), tileSet[2]},
+            {new (Grass, Grass, Dirt, Grass), tileSet[10]},
+            {new (Grass, Grass, Grass, Dirt), tileSet[7]},
+            {new (Dirt, Grass, Grass, Dirt), tileSet[14]},
+            {new (Grass, Dirt, Dirt, Grass), tileSet[4]},
+            {new (Dirt, Dirt, Dirt, Dirt), tileSet[12]},
         };
     }
 
@@ -64,38 +133,84 @@ public class DualGridTilemap : MonoBehaviour {
     {
         if (newTiles == null || newTiles.Length != 16)
         {
-            Debug.LogError("DualGridTilemap: Invalid tiles array. Must be 16 tiles.");
+            Debug.LogError("DualGridTilemap: Invalid tiles array.");
             return;
         }
+
+        if (_crossfadeCoroutine != null) StopCoroutine(_crossfadeCoroutine);
+        _crossfadeCoroutine = StartCoroutine(CrossfadeRoutine(newTiles));
+    }
+
+    private IEnumerator CrossfadeRoutine(Tile[] newTiles)
+    {
+        Debug.Log("[DualGridTilemap] Starting Crossfade...");
+        EnsureSecondaryTilemap();
+
+        // 1. Generate new rules
+        var nextRules = GenerateRules(newTiles);
         
+        // 2. Prepare Next Tilemap (Hidden)
+        SetTilemapAlpha(_displayTilemapNext, 0f);
+        _displayTilemapNext.ClearAllTiles();
+        RefreshDisplayTilemap(_displayTilemapNext, nextRules);
+        
+        // Ensure Next renders ON TOP of Current
+        var currentRend = displayTilemap.GetComponent<TilemapRenderer>();
+        var nextRend = _displayTilemapNext.GetComponent<TilemapRenderer>();
+        if (currentRend != null && nextRend != null)
+        {
+            nextRend.sortingOrder = currentRend.sortingOrder + 1;
+        }
+        
+        // Ensure Current is fully visible
+        SetTilemapAlpha(displayTilemap, 1f);
+        
+        // 3. Fade
+        float timer = 0f;
+        while (timer < FADE_DURATION)
+        {
+            timer += Time.deltaTime;
+            float t = timer / FADE_DURATION;
+            
+            // Fade NEXT in (0 -> 1)
+            SetTilemapAlpha(_displayTilemapNext, t);
+            
+            // Keep CURRENT at 1
+            SetTilemapAlpha(displayTilemap, 1f);
+            
+            yield return null;
+        }
+        
+        // 4. Finalize
+        SetTilemapAlpha(displayTilemap, 0f); // Now hide old
+        SetTilemapAlpha(_displayTilemapNext, 1f); // Show new
+        
+        // 5. Swap logic
+        // We want 'displayTilemap' to always refer to the visible active one
+        // so that existing 'SetCell' calls continue to work on the correct map.
+        var tempMap = displayTilemap;
+        displayTilemap = _displayTilemapNext;
+        _displayTilemapNext = tempMap;
+        
+        // Update current rules and tiles reference so SetCell works correctly
         this.tiles = newTiles;
+        _currentRules = nextRules;
         
-        InitializeDictionary();
+        Debug.Log("[DualGridTilemap] Crossfade Complete.");
+    }
 
-        // Re-populate dictionary with new tiles
-        neighbourTupleToTile[new (Grass, Grass, Grass, Grass)] = tiles[6];
-        neighbourTupleToTile[new (Dirt, Dirt, Dirt, Grass)] = tiles[13];
-        neighbourTupleToTile[new (Dirt, Dirt, Grass, Dirt)] = tiles[0];
-        neighbourTupleToTile[new (Dirt, Grass, Dirt, Dirt)] = tiles[8];
-        neighbourTupleToTile[new (Grass, Dirt, Dirt, Dirt)] = tiles[15];
-        neighbourTupleToTile[new (Dirt, Grass, Dirt, Grass)] = tiles[1];
-        neighbourTupleToTile[new (Grass, Dirt, Grass, Dirt)] = tiles[11];
-        neighbourTupleToTile[new (Dirt, Dirt, Grass, Grass)] = tiles[3];
-        neighbourTupleToTile[new (Grass, Grass, Dirt, Dirt)] = tiles[9];
-        neighbourTupleToTile[new (Dirt, Grass, Grass, Grass)] = tiles[5];
-        neighbourTupleToTile[new (Grass, Dirt, Grass, Grass)] = tiles[2];
-        neighbourTupleToTile[new (Grass, Grass, Dirt, Grass)] = tiles[10];
-        neighbourTupleToTile[new (Grass, Grass, Grass, Dirt)] = tiles[7];
-        neighbourTupleToTile[new (Dirt, Grass, Grass, Dirt)] = tiles[14];
-        neighbourTupleToTile[new (Grass, Dirt, Dirt, Grass)] = tiles[4];
-        neighbourTupleToTile[new (Dirt, Dirt, Dirt, Dirt)] = tiles[12];
-
-        RefreshDisplayTilemap();
+    private void SetTilemapAlpha(Tilemap map, float alpha)
+    {
+        if (map == null) return;
+        var c = map.color;
+        c.a = alpha;
+        map.color = c;
     }
 
     public void SetCell(Vector3Int coords, Tile tile) {
         placeholderTilemap.SetTile(coords, tile);
-        setDisplayTile(coords);
+        // Only update the currently active display map
+        setDisplayTile(coords, displayTilemap, _currentRules);
     }
 
     private TileType getPlaceholderTileTypeAt(Vector3Int coords) {
@@ -107,8 +222,8 @@ public class DualGridTilemap : MonoBehaviour {
             return Grass;
     }
 
-    protected Tile calculateDisplayTile(Vector3Int coords) {
-        // 4 neighbours
+    // Updated to be stateless/pure if possible
+    protected Tile calculateDisplayTile(Vector3Int coords, Dictionary<Tuple<TileType, TileType, TileType, TileType>, Tile> rules) {
         TileType topRight = getPlaceholderTileTypeAt(coords - NEIGHBOURS[0]);
         TileType topLeft = getPlaceholderTileTypeAt(coords - NEIGHBOURS[1]);
         TileType botRight = getPlaceholderTileTypeAt(coords - NEIGHBOURS[2]);
@@ -116,21 +231,45 @@ public class DualGridTilemap : MonoBehaviour {
 
         Tuple<TileType, TileType, TileType, TileType> neighbourTuple = new(topLeft, topRight, botLeft, botRight);
 
-        return neighbourTupleToTile[neighbourTuple];
+        if (rules.TryGetValue(neighbourTuple, out Tile tile))
+        {
+            return tile;
+        }
+        return null; // Should not happen with complete rules
     }
 
-    protected void setDisplayTile(Vector3Int pos) {
+    protected void setDisplayTile(Vector3Int pos, Tilemap targetMap, Dictionary<Tuple<TileType, TileType, TileType, TileType>, Tile> rules) {
+         if (targetMap == null || rules == null) return;
+         
         for (int i = 0; i < NEIGHBOURS.Length; i++) {
             Vector3Int newPos = pos + NEIGHBOURS[i];
-            displayTilemap.SetTile(newPos, calculateDisplayTile(newPos));
+            targetMap.SetTile(newPos, calculateDisplayTile(newPos, rules));
         }
     }
 
-    // The tiles on the display tilemap will recalculate themselves based on the placeholder tilemap
     public void RefreshDisplayTilemap() {
+        // Overload for default/legacy usage
+        RefreshDisplayTilemap(displayTilemap, _currentRules);
+    }
+
+    public void RefreshDisplayTilemap(Tilemap targetMap, Dictionary<Tuple<TileType, TileType, TileType, TileType>, Tile> rules) {
+        if (targetMap == null || rules == null) return;
+
+        // Iterate a reasonable range or bounds. 
+        // For efficiency, maybe get bounds of placeholder?
+        // Original code used hardcoded -50 to 50
         for (int i = -50; i < 50; i++) {
             for (int j = -50; j < 50; j++) {
-                setDisplayTile(new Vector3Int(i, j, 0));
+                // Use invalid pos to trigger updates without modifying logic much?
+                // setDisplayTile uses POS to update neighbors.
+                // Just calculating strictly by cell might be cleaner for full refresh.
+                // But setDisplayTile logic affects 4 cells per pos.
+                // Let's stick to the grid scan.
+                
+                // Directly set the tile for this position? 
+                // Wait, calculateDisplayTile(newPos) takes a coord and converts it using rules.
+                
+                targetMap.SetTile(new Vector3Int(i,j,0), calculateDisplayTile(new Vector3Int(i,j,0), rules));
             }
         }
     }

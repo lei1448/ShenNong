@@ -1,14 +1,24 @@
 using QFramework;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 
 public class SeasonAtmosphereController : MonoBehaviour, IController
 {
     public IArchitecture GetArchitecture() => ShennongAlmanac.Interface;
 
-    private Image _leftBranch;
-    private Image _rightBranch;
+    // Dual layers for crossfade
+    private Image _leftBranchCurrent;
+    private Image _leftBranchNext;
+    
+    private Image _rightBranchCurrent;
+    private Image _rightBranchNext;
+    
     private ITermModel _termModel;
+    private Coroutine _transitionCoroutine;
+    private Season _currentSeason;
+    
+    private const float FADE_DURATION = 1.0f;
 
     private void Start()
     {
@@ -16,13 +26,19 @@ public class SeasonAtmosphereController : MonoBehaviour, IController
         
         SetupUI();
         
-        // Initial update
-        UpdateAtmosphere(_termModel.GetSeason());
+        // Initial set (no fade)
+        _currentSeason = _termModel.GetSeason();
+        SetSeasonImmediate(_currentSeason);
 
         // Listen for term changes
         _termModel.CurrentTermId.Register(termId =>
         {
-             UpdateAtmosphere(_termModel.GetSeason());
+             var newSeason = _termModel.GetSeason();
+             if (newSeason != _currentSeason)
+             {
+                 _currentSeason = newSeason;
+                 UpdateAtmosphere(newSeason);
+             }
         }).UnRegisterWhenGameObjectDestroyed(gameObject);
     }
 
@@ -78,30 +94,38 @@ public class SeasonAtmosphereController : MonoBehaviour, IController
             new Vector2(0f, 0f), 
             new Vector2(sideWidthPercent, 1f));
             
-        _leftBranch = CreateBranchImage("LeftImage", leftMask.transform);
-        // Align Top-Center of the mask, Scale up
-        var leftRect = _leftBranch.rectTransform;
-        leftRect.anchorMin = new Vector2(0.5f, 1f);
-        leftRect.anchorMax = new Vector2(0.5f, 1f);
-        leftRect.pivot = new Vector2(0.5f, 1f); // Top Pivot
-        leftRect.anchoredPosition = new Vector2(0, 0); // Top of container
-        leftRect.sizeDelta = new Vector2(imageSize, imageSize);
+        // Create Two Layers for Left
+        _leftBranchCurrent = CreateBranchImage("LeftImage_Current", leftMask.transform);
+        _leftBranchNext = CreateBranchImage("LeftImage_Next", leftMask.transform);
+        
+        ConfigureBranchRect(_leftBranchCurrent, imageSize);
+        ConfigureBranchRect(_leftBranchNext, imageSize);
 
         // Right Side
         var rightMask = CreateMaskContainer("RightMask", container.transform, 
             new Vector2(1f - sideWidthPercent, 0f), 
             new Vector2(1f, 1f));
 
-        _rightBranch = CreateBranchImage("RightImage", rightMask.transform);
-        var rightRect = _rightBranch.rectTransform;
-        rightRect.anchorMin = new Vector2(0.5f, 1f);
-        rightRect.anchorMax = new Vector2(0.5f, 1f);
-        rightRect.pivot = new Vector2(0.5f, 1f);
-        rightRect.anchoredPosition = new Vector2(0, 0);
-        rightRect.sizeDelta = new Vector2(imageSize, imageSize);
+        // Create Two Layers for Right
+        _rightBranchCurrent = CreateBranchImage("RightImage_Current", rightMask.transform);
+        _rightBranchNext = CreateBranchImage("RightImage_Next", rightMask.transform);
+        
+        ConfigureBranchRect(_rightBranchCurrent, imageSize);
+        ConfigureBranchRect(_rightBranchNext, imageSize);
         
         // Mirror Right
-        rightRect.localScale = new Vector3(-1, 1, 1);
+        _rightBranchCurrent.rectTransform.localScale = new Vector3(-1, 1, 1);
+        _rightBranchNext.rectTransform.localScale = new Vector3(-1, 1, 1);
+    }
+    
+    private void ConfigureBranchRect(Image img, float size)
+    {
+        var rt = img.rectTransform;
+        rt.anchorMin = new Vector2(0.5f, 1f);
+        rt.anchorMax = new Vector2(0.5f, 1f);
+        rt.pivot = new Vector2(0.5f, 1f); // Top Pivot
+        rt.anchoredPosition = new Vector2(0, 0); // Top of container
+        rt.sizeDelta = new Vector2(size, size);
     }
 
     private GameObject CreateMaskContainer(string name, Transform parent, Vector2 anchorMin, Vector2 anchorMax)
@@ -114,18 +138,9 @@ public class SeasonAtmosphereController : MonoBehaviour, IController
         rt.offsetMin = Vector2.zero;
         rt.offsetMax = Vector2.zero;
         
-        // Add Mask
-        var maskImage = go.AddComponent<Image>();
-        maskImage.color = new Color(0,0,0,0); // Invisible but needed for mask? 
-        // Actually RectMask2D doesn't need an image, but it clips children to rect.
-        // RectMask2D is more performant and doesn't require an image component usually, 
-        // but standard Mask does. Let's use RectMask2D.
-        DestroyImmediate(maskImage); // removal just in case
-        
         var mask = go.AddComponent<RectMask2D>();
         mask.softness = new Vector2Int(30, 0);
         
-
         return go;
     }
 
@@ -136,32 +151,108 @@ public class SeasonAtmosphereController : MonoBehaviour, IController
         var img = go.AddComponent<Image>();
         img.raycastTarget = false;
         img.preserveAspect = true;
+        
+        // Default transparent
+        var c = img.color;
+        c.a = 0;
+        img.color = c;
+        
         return img;
     }
 
-    private void UpdateAtmosphere(Season season)
+    private void SetSeasonImmediate(Season season)
     {
         string resourceName = GetSeasonResourceName(season);
         var sprite = Resources.Load<Sprite>($"Nongzuowu/树枝/{resourceName}");
         
         if (sprite != null)
         {
-            _leftBranch.sprite = sprite;
-            _rightBranch.sprite = sprite;
-            _leftBranch.gameObject.SetActive(true);
-            _rightBranch.gameObject.SetActive(true);
+            _leftBranchCurrent.sprite = sprite;
+            _rightBranchCurrent.sprite = sprite;
             
-            // Adjust to native size but keep within reasonable bounds if needed
-            // _leftBranch.SetNativeSize(); 
-            // _rightBranch.SetNativeSize();
+            SetAlpha(_leftBranchCurrent, 1f);
+            SetAlpha(_rightBranchCurrent, 1f);
+            SetAlpha(_leftBranchNext, 0f);
+            SetAlpha(_rightBranchNext, 0f); // FIXED: Was _rightBranchCurrent
         }
-        else
+    }
+
+    private void UpdateAtmosphere(Season season)
+    {
+        if (_transitionCoroutine != null)
         {
-            // If resource missing, hide to avoid white boxes
-            _leftBranch.gameObject.SetActive(false);
-            _rightBranch.gameObject.SetActive(false);
-            Debug.LogWarning($"Could not find season branch sprite: Nongzuowu/树枝/{resourceName}");
+            StopCoroutine(_transitionCoroutine);
         }
+        _transitionCoroutine = StartCoroutine(TransitionRoutine(season));
+    }
+
+    private IEnumerator TransitionRoutine(Season targetSeason)
+    {
+        string resourceName = GetSeasonResourceName(targetSeason);
+        var newSprite = Resources.Load<Sprite>($"Nongzuowu/树枝/{resourceName}");
+
+        if (newSprite == null)
+        {
+            Debug.LogWarning($"Could not find season branch sprite: Nongzuowu/树枝/{resourceName}");
+            yield break;
+        }
+
+        // Prepare Next layer: Alpha 0, correct sprite
+        _leftBranchNext.sprite = newSprite;
+        _rightBranchNext.sprite = newSprite;
+        SetAlpha(_leftBranchNext, 0f);
+        SetAlpha(_rightBranchNext, 0f);
+        
+        // Ensure Next is rendered ON TOP of Current so the fade-in is visible
+        _leftBranchNext.rectTransform.SetAsLastSibling();
+        _rightBranchNext.rectTransform.SetAsLastSibling();
+        
+        // Ensure Current is fully visible (Constant background)
+        SetAlpha(_leftBranchCurrent, 1f);
+        SetAlpha(_rightBranchCurrent, 1f);
+        
+        float timer = 0f;
+        while (timer < FADE_DURATION)
+        {
+            timer += Time.deltaTime;
+            float t = timer / FADE_DURATION;
+            
+            // Fade NEXT in (0 -> 1)
+            SetAlpha(_leftBranchNext, t);
+            SetAlpha(_rightBranchNext, t);
+            
+            // Keep CURRENT at 1
+            SetAlpha(_leftBranchCurrent, 1f);
+            SetAlpha(_rightBranchCurrent, 1f);
+            
+            yield return null;
+        }
+
+        // Finalize state
+        // Set Next to 1
+        SetAlpha(_leftBranchNext, 1f);
+        SetAlpha(_rightBranchNext, 1f);
+        
+        // Disable Current (it's now covered)
+        SetAlpha(_leftBranchCurrent, 0f);
+        SetAlpha(_rightBranchCurrent, 0f);
+        
+        // Swap references
+        var tempL = _leftBranchCurrent;
+        _leftBranchCurrent = _leftBranchNext;
+        _leftBranchNext = tempL;
+        
+        var tempR = _rightBranchCurrent;
+        _rightBranchCurrent = _rightBranchNext;
+        _rightBranchNext = tempR;
+    }
+
+    private void SetAlpha(Image img, float alpha)
+    {
+        if (img == null) return;
+        var c = img.color;
+        c.a = alpha;
+        img.color = c;
     }
 
     private string GetSeasonResourceName(Season season)

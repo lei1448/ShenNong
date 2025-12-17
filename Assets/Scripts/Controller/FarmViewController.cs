@@ -205,21 +205,22 @@ public class FarmViewController : MonoBehaviour, IController
     private Sprite GetAlertSprite(CropData data)
     {
         // Priority: Temp > Light > Fertility > Moisture
+        var stage = data.Config.GetCurrentStageData(data.GrowthDays);
         
         // Temp
-        if (data.CurrentState.Temp < data.Config.TempRange.Min) return iconTempLow;
-        if (data.CurrentState.Temp > data.Config.TempRange.Max) return iconTempHigh;
+        if (data.CurrentState.Temp < stage.TempRange.Min) return iconTempLow;
+        if (data.CurrentState.Temp > stage.TempRange.Max) return iconTempHigh;
 
         // Light
-        if (data.CurrentState.Light < data.Config.LightRange.Min) return iconLightLow;
-        if (data.CurrentState.Light > data.Config.LightRange.Max) return iconLightHigh;
+        if (data.CurrentState.Light < stage.LightRange.Min) return iconLightLow;
+        if (data.CurrentState.Light > stage.LightRange.Max) return iconLightHigh;
 
         // Fertility
-        if (data.CurrentState.Fertility < data.Config.FertilityRange.Min) return iconFertilityLow;
+        if (data.CurrentState.Fertility < stage.FertilityRange.Min) return iconFertilityLow;
 
         // Moisture
-        if (data.CurrentState.Moisture < data.Config.MoistureRange.Min) return iconMoistureLow;
-        if (data.CurrentState.Moisture > data.Config.MoistureRange.Max) return iconMoistureHigh;
+        if (data.CurrentState.Moisture < stage.MoistureRange.Min) return iconMoistureLow;
+        if (data.CurrentState.Moisture > stage.MoistureRange.Max) return iconMoistureHigh;
 
         return null;
     }

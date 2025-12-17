@@ -15,6 +15,7 @@ public class SeasonTilemapController : MonoBehaviour, IController
     public Tile[] WinterTiles;
 
     private ITermModel _termModel;
+    private Season _currentSeason;
 
     public IArchitecture GetArchitecture()
     {
@@ -41,12 +42,18 @@ public class SeasonTilemapController : MonoBehaviour, IController
         this.RegisterEvent<OnTermChange>(OnTermChange);
         
         // Initialize with current season
-        UpdateTilesForSeason(_termModel.GetSeason());
+        _currentSeason = _termModel.GetSeason();
+        UpdateTilesForSeason(_currentSeason);
     }
 
     private void OnTermChange(OnTermChange e)
     {
-        UpdateTilesForSeason(_termModel.GetSeason());
+        var newSeason = _termModel.GetSeason();
+        if (newSeason != _currentSeason)
+        {
+            _currentSeason = newSeason;
+            UpdateTilesForSeason(newSeason);
+        }
     }
 
     private void UpdateTilesForSeason(Season season)

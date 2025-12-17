@@ -27,18 +27,6 @@ public class FarmSystem : AbstractSystem
     private void OnTermSettlement(OnTermSettlement e)
     {
         // 1. Calculate how many days are remaining in this solar term that we are skipping
-        // CurrentDayInTerm is 1-indexed. If it's day 1, and we jump, we simulate passing the remaining 14 days (Total 15).
-        // If DaysPerTerm is 15.
-        // Days to grow = 15 - CurrentDayInTerm + 1? No.
-        // If I am on Day 1 (Morning), and I skip to Next Term, I am effectively finishing Day 1 to Day 15.
-        // So I grow for (DaysPerTerm - CurrentInTerm + 1) days?
-        // Let's assume standard logic: Remaining days = DaysPerTerm - CurrentDayInTerm + 1. 
-        // e.g. Day 1: 15 - 1 + 1 = 15 days.
-        // e.g. Day 15: 15 - 15 + 1 = 1 day.
-        // Actually, AdvanceTerm resets CurrentDay to 1 for NEXT term.
-        // So we are simulating the PASSAGE of the REST of the current term.
-        // Let's use simple math: DaysToSimulate = _termModel.DaysPerTerm - _termModel.CurrentDayInTerm.Value + 1;
-        
         int daysToSimulate = _termModel.DaysPerTerm - _termModel.CurrentDayInTerm.Value + 1;
         // Safety check
         if (daysToSimulate < 0) daysToSimulate = 0;
@@ -48,6 +36,7 @@ public class FarmSystem : AbstractSystem
 
         // End of Turn: Calculate Blood / HP Damage based on deviation
         List<Vector3Int> positions = new List<Vector3Int>(_cropModel.CropMap.Keys);
+        int currentTermScore = 0;
         
         foreach (var pos in positions)
         {
@@ -57,18 +46,19 @@ public class FarmSystem : AbstractSystem
             int damage = CalculateDamage(crop);
             if (damage > 0)
             {
-                // Damage is applied once per term skip? Or per day skipped?
-                // Visual Novels usually simplify this to "Turn-based damage".
-                // Let's keep it as is (Once per Term Settlement).
-                
                 crop.CurrentHP -= damage;
                 if (crop.CurrentHP < 0) crop.CurrentHP = 0;
                 
                 Debug.Log($"[FarmSystem] Crop at {pos} took {damage} damage. Current HP: {crop.CurrentHP}");
             }
             
+            currentTermScore += crop.CurrentHP;
+            
             this.SendEvent(new OnCropUpdated { Position = pos });
         }
+
+        Debug.Log($"[FarmSystem] Term Settlement Score: {currentTermScore}");
+        this.SendEvent(new OnTermScoreSettled { Score = currentTermScore, TermName = e.TermName });
     }
 
     private void AdvanceCropGrowth(int days)
@@ -81,7 +71,7 @@ public class FarmSystem : AbstractSystem
             if (!crop.IsMature)
             {
                 crop.GrowthDays += days;
-                if (crop.GrowthDays >= crop.Config.DaysToMature)
+                if (crop.GrowthDays >= crop.Config.TotalGrowthDays)
                 {
                     crop.IsMature = true;
                 }
@@ -93,7 +83,7 @@ public class FarmSystem : AbstractSystem
     private void OnTermChange(OnTermChange e)
     {
         // Start of Turn: Reset Environment Params
-        ResetCropEnvironment();
+        // ResetCropEnvironment(); // User requested this to only run on planting. Use ambient update if needed later.
     }
 
     private void ResetCropEnvironment()
@@ -124,10 +114,12 @@ public class FarmSystem : AbstractSystem
     private int CalculateDamage(CropData crop)
     {
         int damage = 0;
-        damage += GetDeviation(crop.CurrentState.Temp, crop.Config.TempRange);
-        damage += GetDeviation(crop.CurrentState.Light, crop.Config.LightRange);
-        damage += GetDeviation(crop.CurrentState.Moisture, crop.Config.MoistureRange);
-        damage += GetDeviation(crop.CurrentState.Fertility, crop.Config.FertilityRange);
+        var currentStage = crop.Config.GetCurrentStageData(crop.GrowthDays);
+        
+        //damage += GetDeviation(crop.CurrentState.Temp, currentStage.TempRange);
+        damage += GetDeviation(crop.CurrentState.Light, currentStage.LightRange);
+        damage += GetDeviation(crop.CurrentState.Moisture, currentStage.MoistureRange);
+        //damage += GetDeviation(crop.CurrentState.Fertility, currentStage.FertilityRange);
         return damage;
     }
 
